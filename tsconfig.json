@@ -5,23 +5,21 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
-    /* AJOUT IMPORTANT : Dire à TS de reconnaître les types de Vite */
     "types": ["vite/client"]
   },
-  "include": ["src"]
+  // === CORRECTION ICI ===
+  // On dit à TypeScript de chercher tous les fichiers .ts et .tsx
+  // dans le dossier actuel et tous ses sous-dossiers,
+  // au lieu de chercher un dossier "src" qui n'existe pas.
+  "include": ["**/*.ts", "**/*.tsx"]
 }
