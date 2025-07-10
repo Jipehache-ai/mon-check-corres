@@ -23,22 +23,26 @@ const TONE_DEFINITIONS: { [key: string]: string } = {
 };
 
 export async function generateContent(userText: string, tone: string): Promise<string> {
-  // On vérifie que le ton est valide, sinon on prend une valeur par défaut.
   const validTone = TONE_DEFINITIONS[tone] ? tone : 'informatif';
   const toneInstruction = TONE_DEFINITIONS[validTone];
 
-  // === CORRECTION ICI ===
-  // On construit le prompt de manière plus sûre.
+  // --- AMÉLIORATION CI-DESSOUS ---
   const prompt = `
     Tu es un assistant de rédaction expert, spécialisé dans la transformation de textes bruts en articles journalistiques de haute qualité.
 
-    **Mission :** Analyse le texte brut fourni ci-dessous et réécris-le intégralement.
+    **Mission :** Analyse le texte brut fourni ci-dessous et réécris-le intégralement en respectant les contraintes suivantes.
     
     **Contrainte de style impérative :** Tu dois adopter le ton et le style suivants :
     ---
     TON : ${validTone.toUpperCase()}
     DÉFINITION DU STYLE À APPLIQUER : ${toneInstruction}
     ---
+
+    **NOUVELLE RÈGLE - GESTION DES CITATIONS (VERBATIM) :**
+    Si le texte brut de l'utilisateur contient des passages entre guillemets français (« ... »), tu dois les traiter comme des citations directes et sacrées.
+    1.  **Intégration Obligatoire :** Tu DOIS intégrer ces citations telles quelles dans l'article généré, là où c'est logiquement pertinent.
+    2.  **Préservation du Contenu :** Tu n'as PAS le droit de modifier le vocabulaire, la syntaxe, ou la structure de la phrase à l'intérieur des guillemets.
+    3.  **Correction Orthographique Autorisée :** Tu es UNIQUEMENT autorisé à corriger discrètement les fautes d'orthographe à l'intérieur des guillemets, mais seulement si cela ne change en rien le sens ou le style original de la citation. Le reste doit être identique.
 
     **Contrainte de format de sortie :** Ta réponse DOIT être un objet JSON valide et rien d'autre. Ne renvoie AUCUN texte avant ou après l'objet JSON, et n'utilise pas de formatage Markdown comme \`\`\`json.
     L'objet JSON doit avoir la structure suivante :
