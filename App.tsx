@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { generateContent } from './services/geminiService';
+import { generateContent } from './services/openaiService';
 import { ArticleOutput } from './types';
 import { InputField } from './components/InputField';
 import { CopyButton } from './components/CopyButton';
