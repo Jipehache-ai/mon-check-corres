@@ -8,6 +8,11 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": "20.x"
+
+  },
+
   "dependencies": {
     "@google/genai": "^1.8.0",
     "@google/generative-ai": "^0.24.1",
