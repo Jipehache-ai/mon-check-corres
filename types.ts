@@ -2,6 +2,10 @@ export interface EditorialAnalysis {
   subject: string;
   mainInformation: string;
   angle: string;
+
+  // Commune principale concernée par l'article
+  commune: string;
+
   people: string[];
   places: string[];
   dates: string[];

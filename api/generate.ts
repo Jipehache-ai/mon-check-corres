@@ -28,7 +28,8 @@ export default async function handler(
       articleType,
       objective,
       style,
-      angle
+      angle,
+      localization
     } = req.body;
 
     if (!userText || typeof userText !== 'string') {
@@ -64,6 +65,11 @@ export default async function handler(
       typeof angle === 'string'
         ? angle
         : '';
+
+        const safeLocalization =
+  typeof localization === 'string'
+    ? localization.trim()
+    : '';
 
     let prompt = '';
 
@@ -118,10 +124,21 @@ FORMAT DE SORTIE :
 
 Retourne UNIQUEMENT un objet JSON valide :
 
+10. La commune principale concernée par le sujet.
+
+IMPORTANT POUR LA COMMUNE :
+
+- Retourne dans "commune" le nom exact de la commune principalement concernée par l'article.
+- Il doit s'agir d'une commune de Loire-Atlantique si une telle commune est identifiable dans la source.
+- Ne déduis pas une commune qui n'est pas identifiable dans la source.
+- Si aucune commune principale n'est identifiable, retourne une chaîne vide : "".
+- Ne confonds pas la commune principale avec un simple lieu cité dans la matière.
+
 {
   "subject": "string",
   "mainInformation": "string",
   "angle": "string",
+  "commune": "string",
   "people": ["string"],
   "places": ["string"],
   "dates": ["string"],
@@ -129,6 +146,9 @@ Retourne UNIQUEMENT un objet JSON valide :
   "quotes": ["string"],
   "vigilance": ["string"]
 }
+
+Si aucune commune principale n'est identifiable,
+retourne "commune": "".
 
 TEXTE SOURCE :
 --------------------
@@ -172,12 +192,118 @@ Style : ${safeStyle}
 
 ANGLE RETENU PAR LE JOURNALISTE :
 
-${safeAngle}
+CONTRAINTE DE LOCALISATION DU TITRE :
+
+${safeLocalization}
+
+Cette formulation de localisation est imposée.
+
+Elle doit apparaître obligatoirement à la FIN du titre.
+
+RÈGLE DE NON-RÉPÉTITION DE LA COMMUNE :
+
+- Lorsque la localisation est "près de Nantes", ne mentionne pas
+  le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "près de Saint-Nazaire", ne mentionne pas
+  le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "dans cette commune de Loire-Atlantique",
+  ne mentionne pas le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "à Nantes", le nom Nantes est naturellement
+  conservé puisqu'il fait partie de la localisation.
+- Lorsque la localisation est "à Saint-Nazaire", le nom Saint-Nazaire est
+  naturellement conservé puisqu'il fait partie de la localisation.
+
+La localisation doit constituer le dernier élément du titre.
+
+Ne place jamais le nom de la commune juste avant la localisation
+lorsque cela crée une répétition.
+
+Exemple :
+
+INCORRECT :
+"Un nouvel équipement annoncé par la ville de Rezé près de Nantes"
+
+CORRECT :
+"Un nouvel équipement annoncé près de Nantes"
+
+Le titre doit comporter moins de 120 caractères,
+espaces compris.
+
+CONTRAINTE DE LOCALISATION DU TITRE :
+
+${safeLocalization}
+
+Cette formulation de localisation est imposée.
+
+Elle doit apparaître obligatoirement à la FIN du titre.
+
+RÈGLE DE NON-RÉPÉTITION DE LA COMMUNE :
+
+- Lorsque la localisation est "près de Nantes", ne mentionne pas
+  le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "près de Saint-Nazaire", ne mentionne pas
+  le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "dans cette commune de Loire-Atlantique",
+  ne mentionne pas le nom de la commune concernée dans le titre.
+- Lorsque la localisation est "à Nantes", le nom Nantes est naturellement
+  conservé puisqu'il fait partie de la localisation.
+- Lorsque la localisation est "à Saint-Nazaire", le nom Saint-Nazaire est
+  naturellement conservé puisqu'il fait partie de la localisation.
+
+La localisation doit constituer le dernier élément du titre.
+
+Ne place jamais le nom de la commune juste avant la localisation
+lorsque cela crée une répétition.
+
+Exemple :
+
+INCORRECT :
+"Un nouvel équipement annoncé par la ville de Rezé près de Nantes"
+
+CORRECT :
+"Un nouvel équipement annoncé près de Nantes"
+
+Le titre doit comporter moins de 120 caractères,
+espaces compris.
 
 IMPORTANT :
 
 Cet angle doit guider la construction de l'article,
 mais tu ne dois jamais ajouter de faits absents de la source.
+
+CONTRAINTE DE LOCALISATION DU CHAPEAU :
+
+Le chapeau doit mentionner assez tôt le nom exact de la commune
+principale concernée, suivi immédiatement de :
+
+"(Loire-Atlantique)"
+
+Exemple :
+"À Rezé (Loire-Atlantique), ..."
+
+Ne remplace pas le nom exact de la commune par la formulation
+générique utilisée dans le titre.
+
+RÈGLE DE NON-RÉPÉTITION :
+
+Lorsque le nom de la commune apparaît déjà sous la forme :
+
+"Commune (Loire-Atlantique)"
+
+ne répète pas immédiatement le nom de cette commune dans une
+expression comme "la ville de Commune".
+
+Si le texte désigne la municipalité ou la collectivité locale,
+utilise "la Ville" avec une majuscule.
+
+Exemple incorrect :
+"À Rezé (Loire-Atlantique), la ville de Rezé annonce..."
+
+Exemple correct :
+"À Rezé (Loire-Atlantique), la Ville annonce..."
+
+Le nom de la commune doit donc apparaître clairement dans le
+chapeau, mais sans répétition inutile immédiatement après.
 
 STRUCTURE :
 

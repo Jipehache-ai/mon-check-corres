@@ -6,6 +6,7 @@ export interface GenerateOptions {
   objective: string;
   style: string;
   angle?: string;
+  localization?: string;
 }
 
 export async function generateContent(

@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { generateContent } from './services/openaiService';
+import { getLocalization } from './services/localization';
 import { EditorialResult } from './types';
 import { InputField } from './components/InputField';
 import { CopyButton } from './components/CopyButton';
@@ -45,6 +46,21 @@ const STYLES = [
   'Reportage',
   'Explicatif',
 ];
+
+function checkLedeLocation(
+  lede: string,
+  commune: string
+): boolean {
+  if (!lede.trim() || !commune.trim()) {
+    return false;
+  }
+
+  const expected = `${commune} (Loire-Atlantique)`;
+
+  return lede
+    .toLocaleLowerCase('fr-FR')
+    .includes(expected.toLocaleLowerCase('fr-FR'));
+}
 
 export default function App(): React.ReactNode {
   const [rawText, setRawText] = useState('');
@@ -124,22 +140,49 @@ export default function App(): React.ReactNode {
     setError(null);
 
     try {
-      const resultString = await generateContent({
-        mode: 'write',
-        userText: rawText,
-        contentType,
-        articleType,
-        objective,
-        style,
-        angle: result.analysis.angle,
-      });
+      const localization = getLocalization(
+  result.analysis.commune
+);
+
+const resultString = await generateContent({
+  mode: 'write',
+  userText: rawText,
+  contentType,
+  articleType,
+  objective,
+  style,
+  angle: result.analysis.angle,
+  localization: localization.label,
+});
 
       const article = JSON.parse(resultString);
 
-      setResult({
-        ...result,
-        article,
-      });
+// Contrôle du titre
+const title = typeof article.title === 'string'
+  ? article.title.trim()
+  : '';
+
+const titleLength = title.length;
+
+const localizationIsCorrect =
+  !localization.label || title.endsWith(localization.label);
+
+const titleIsValid =
+  titleLength < 120 &&
+  localizationIsCorrect;
+
+if (!titleIsValid) {
+  setError(
+    `Titre à corriger : ${titleLength} caractères. ` +
+    `La localisation doit apparaître exactement à la fin du titre.`
+  );
+}
+
+setResult({
+  ...result,
+  article,
+});
+
     } catch (e) {
       console.error(
         'Erreur lors de la rédaction :',
@@ -604,6 +647,9 @@ ${analysis.vigilance.join('\n')}`;
                       isReadOnly
                       maxLength={120}
                     />
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+  Titre : {result.article.title.length} / 119 caractères
+</div>
 
                     {/* CHAPEAU */}
                     <InputField
